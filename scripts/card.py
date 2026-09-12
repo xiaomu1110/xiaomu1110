@@ -2,7 +2,7 @@
 """Two-column profile card. Square corners, hairline rules, tight rhythm.
 
 Outputs gen/profile-{light,dark}.svg
-Text is latin only (Inter embedded); Chinese copy lives in the README.
+Latin text uses embedded Inter; Chinese falls back to the viewer's platform font.
 """
 import base64
 import io
@@ -28,6 +28,10 @@ FAINT_L, FAINT_D = "#86868b", "#a1a1a6"
 HAIR_L, HAIR_D = "#e3e3e6", "#3a3a3c"
 BLUE_L, BLUE_D = "#0071e3", "#2997ff"
 
+# Inter covers latin; Chinese falls back to the platform UI font of the viewer.
+FAM = ("Inter, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', "
+       "'Noto Sans SC', sans-serif")
+
 LANG_COLORS = {
     "JavaScript": "#f1e05a", "TypeScript": "#3178c6", "C#": "#4c8f5d",
     "C": "#8f8f8f", "C++": "#f34b7d", "Python": "#3572A5", "HTML": "#e34c26",
@@ -41,8 +45,8 @@ FONT_URLS = {
 }
 
 REPO_DESCS = {
-    "stealth-pdf-viewer": "A stealthy PDF viewer and annotator for VS Code.",
-    "MqttVision-Server": "Realtime MQTT-powered vision server, written in C#.",
+    "stealth-pdf-viewer": "隐蔽的 VS Code PDF 阅读批注工具。",
+    "MqttVision-Server": "C# 编写的实时 MQTT 视觉服务。",
 }
 
 
@@ -90,24 +94,11 @@ def fetch_data():
         "stars": r["stargazers_count"],
     } for r in featured]
 
-    joined = datetime.strptime(user["created_at"], "%Y-%m-%dT%H:%M:%SZ").strftime("%b %Y")
+    dt = datetime.strptime(user["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+    joined = f"{dt.year} 年 {dt.month} 月"
     return dict(commits=commits, stars=sum(r["stargazers_count"] for r in repos),
                 followers=user["followers"], repos=user["public_repos"],
                 langs=langs, featured=featured, joined=joined)
-
-
-def fetch_bing(dest):
-    """Download today's Bing wallpaper. Returns (page_url, copyright, bytes)."""
-    ua = {"User-Agent": "Mozilla/5.0 (profile-bing-fetch)"}
-    api = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN"
-    with urllib.request.urlopen(urllib.request.Request(api, headers=ua), timeout=30) as r:
-        meta = json.loads(r.read().decode("utf-8"))["images"][0]
-    img_url = "https://www.bing.com" + meta["urlbase"] + "_1920x1080.jpg"
-    with urllib.request.urlopen(urllib.request.Request(img_url, headers=ua), timeout=90) as r:
-        blob = r.read()
-    with open(dest, "wb") as f:
-        f.write(blob)
-    return img_url, meta.get("copyright", ""), len(blob)
 
 
 def load_fonts():
@@ -136,45 +127,45 @@ def build(d, theme):
     a = L.append
 
     # ---- left column: identity
-    a(f'  <text x="{LX}" y="64" font-family="Inter" font-size="34" font-weight="600" '
+    a(f'  <text x="{LX}" y="64" font-family="{FAM}" font-size="34" font-weight="600" '
       f'letter-spacing="-0.9" fill="{ink}">xiaomu.</text>')
-    a(f'  <text x="{LX}" y="90" font-family="Inter" font-size="13" fill="{gray}">Code. Build. Ship.</text>')
+    a(f'  <text x="{LX}" y="90" font-family="{FAM}" font-size="13.5" fill="{gray}">写代码，也写工具。</text>')
 
     a(f'  <line x1="{LX}" y1="114" x2="{LX+LW}" y2="114" stroke="{hair}"/>')
 
-    rows = [("Joined", d["joined"]),
-            ("Public repos", d["repos"]),
-            ("Followers", d["followers"]),
-            ("Commits", f'{d["commits"]:,}')]
+    rows = [("加入", d["joined"]),
+            ("公开仓库", d["repos"]),
+            ("关注者", d["followers"]),
+            ("提交次数", f'{d["commits"]:,}')]
     y = 140
     for label, value in rows:
-        a(f'  <text x="{LX}" y="{y}" font-family="Inter" font-size="11" letter-spacing="0.4" '
+        a(f'  <text x="{LX}" y="{y}" font-family="{FAM}" font-size="11.5" letter-spacing="0.5" '
           f'fill="{faint}">{esc(label)}</text>')
-        a(f'  <text x="{LX+LW}" y="{y}" text-anchor="end" font-family="Inter" font-size="12.5" '
+        a(f'  <text x="{LX+LW}" y="{y}" text-anchor="end" font-family="{FAM}" font-size="12.5" '
           f'font-weight="600" font-feature-settings="\'tnum\'" fill="{ink}">{esc(value)}</text>')
         y += 26
 
-    a(f'  <text x="{LX}" y="{y+18}" font-family="Inter" font-size="12" fill="{blue}">'
+    a(f'  <text x="{LX}" y="{y+18}" font-family="{FAM}" font-size="12" fill="{blue}">'
       f'github.com/{USER}</text>')
 
     # divider
     a(f'  <line x1="{DIV}" y1="40" x2="{DIV}" y2="{H-40}" stroke="{hair}"/>')
 
     # ---- right column: selected work
-    a(f'  <text x="{RX}" y="50" font-family="Inter" font-size="11" font-weight="600" '
-      f'letter-spacing="1.1" fill="{faint}">SELECTED WORK</text>')
+    a(f'  <text x="{RX}" y="50" font-family="{FAM}" font-size="11.5" font-weight="600" '
+      f'letter-spacing="0.8" fill="{faint}">作品</text>')
 
     y = 84
     for r in d["featured"]:
         dot = LANG_COLORS.get(r["lang"], "#aeaeb2")
         meta = r["lang"] + (f'   {r["stars"]}★' if r["stars"] else "")
-        a(f'  <text x="{RX}" y="{y}" font-family="Inter" font-size="15" font-weight="600" '
+        a(f'  <text x="{RX}" y="{y}" font-family="{FAM}" font-size="15" font-weight="600" '
           f'letter-spacing="-0.2" fill="{ink}">{esc(r["name"])}</text>')
-        a(f'  <text x="{RX+RW}" y="{y}" text-anchor="end" font-family="Inter" font-size="12" '
+        a(f'  <text x="{RX+RW}" y="{y}" text-anchor="end" font-family="{FAM}" font-size="12" '
           f'fill="{gray}">{esc(meta)}</text>')
         if r["desc"]:
             a(f'  <circle cx="{RX+3.5}" cy="{y+22.5}" r="3.5" fill="{dot}"/>')
-            a(f'  <text x="{RX+14}" y="{y+26}" font-family="Inter" font-size="12.5" '
+            a(f'  <text x="{RX+14}" y="{y+26}" font-family="{FAM}" font-size="12.5" '
               f'fill="{gray}">{esc(r["desc"])}</text>')
         y += 48
 
@@ -183,16 +174,16 @@ def build(d, theme):
     a(f'  <line x1="{RX}" y1="{y}" x2="{RX+RW}" y2="{y}" stroke="{hair}"/>')
 
     y += 26
-    a(f'  <text x="{RX}" y="{y}" font-family="Inter" font-size="11" font-weight="600" '
-      f'letter-spacing="1.1" fill="{faint}">ACTIVITY</text>')
+    a(f'  <text x="{RX}" y="{y}" font-family="{FAM}" font-size="11.5" font-weight="600" '
+      f'letter-spacing="0.8" fill="{faint}">活跃度</text>')
     y += 24
-    segs = f'{d["commits"]:,} commits   ·   {d["stars"]} stars   ·   {d["repos"]} repositories'
-    a(f'  <text x="{RX}" y="{y}" font-family="Inter" font-size="13.5" fill="{ink}">{esc(segs)}</text>')
+    segs = f'{d["commits"]:,} 次提交   ·   {d["stars"]} 星标   ·   {d["repos"]} 个仓库'
+    a(f'  <text x="{RX}" y="{y}" font-family="{FAM}" font-size="13" fill="{ink}">{esc(segs)}</text>')
 
     # ---- right column: languages
     y += 30
-    a(f'  <text x="{RX}" y="{y}" font-family="Inter" font-size="11" font-weight="600" '
-      f'letter-spacing="1.1" fill="{faint}">LANGUAGES</text>')
+    a(f'  <text x="{RX}" y="{y}" font-family="{FAM}" font-size="11.5" font-weight="600" '
+      f'letter-spacing="0.8" fill="{faint}">语言</text>')
     bar_y = y + 14
     langs = d["langs"] or [("None", 100)]
     offset = 0.0
@@ -204,7 +195,7 @@ def build(d, theme):
         if offset >= RW:
             break
     legend = "    ".join(f"{n} {p}%" for n, p in langs)
-    a(f'  <text x="{RX}" y="{bar_y+30}" font-family="Inter" font-size="12" fill="{faint}">'
+    a(f'  <text x="{RX}" y="{bar_y+30}" font-family="{FAM}" font-size="12" fill="{faint}">'
       f'{esc(legend)}</text>')
 
     body = "\n".join(L)
@@ -235,9 +226,3 @@ if __name__ == "__main__":
         with io.open(path, "w", encoding="utf-8") as f:
             f.write(svg)
         print("wrote", path, os.path.getsize(path), "bytes")
-
-    try:
-        url, credit, size = fetch_bing(os.path.join(OUT_DIR, "bing.jpg"))
-        print("bing:", size, "bytes |", url, "|", credit)
-    except Exception as e:
-        print("bing fetch failed, keeping previous image:", e)
