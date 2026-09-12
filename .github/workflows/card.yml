@@ -32,7 +32,7 @@ jobs:
           git fetch origin output || true
           git checkout output 2>/dev/null || git checkout -b output
           rm -f hero-*.svg repos-*.svg specs-*.svg card.svg header.svg footer.svg github-metrics.svg github-snake*.svg
-          cp -f /tmp/cards/*.svg .
+          cp -f /tmp/cards/* .
           git add -A
           git commit -m "chore: update profile cards" || echo "no changes"
           git push origin output
