@@ -28,9 +28,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin output || true
+          cp gen/*.svg /tmp/
           git checkout output 2>/dev/null || git checkout -b output
           git rm -r --ignore-unmatch dist gen || true
-          cp -f gen/*.svg .
+          cp -f /tmp/*.svg .
           rm -rf gen
           git add -A
           git commit -m "chore: update profile cards" || echo "no changes"
