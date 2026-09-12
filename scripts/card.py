@@ -15,7 +15,7 @@ USER = "xiaomu1110"
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
 OUT_DIR = "gen"
 
-W, H = 900, 312
+W, H = 900, 328
 PAD = 32
 LX, LW = PAD, 268            # left column: 32 .. 300
 DIV = 340                    # vertical hairline
