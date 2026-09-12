@@ -127,8 +127,8 @@ def build_hero(theme):
     gray = GRAY_L if theme == "light" else GRAY_D
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="250" viewBox="0 0 {W} 250">
   <defs><style>{FONTS}
-{{animation:rise .8s cubic-bezier(.25,.1,.25,1) both}}
-.t{{animation-delay:.12s}}
+.h{{animation:rise .8s cubic-bezier(.25,.1,.25,1) both}}
+.t{{animation:rise .8s cubic-bezier(.25,.1,.25,1) .12s both}}
 @keyframes rise{{from{{opacity:0;transform:translateY(10px)}}to{{opacity:1;transform:none}}}}
   </style></defs>
   <text class="h" x="440" y="128" text-anchor="middle" font-family="Inter" font-size="68" font-weight="600" letter-spacing="-1.5" fill="{ink}">xiaomu.</text>
