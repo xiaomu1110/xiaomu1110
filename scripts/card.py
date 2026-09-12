@@ -1,39 +1,47 @@
 # -*- coding: utf-8 -*-
-"""Generate Apple-minimal style SVG cards for GitHub profile README.
+"""Apple-style profile cards. Minimal, typographic, theme-aware.
 
-Outputs to dist/: header.svg, card.svg, footer.svg
-Data: GitHub REST API. Fonts: Inter (latin) embedded as base64 woff2.
+Outputs to dist/: hero / repos / specs, each in -light and -dark variants.
+Text: latin only (Inter embedded). Chinese copy lives in README markdown.
 """
 import base64
 import io
 import json
 import os
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
 
 USER = "xiaomu1110"
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
 OUT_DIR = "dist"
 
+W = 880
+
+INK_L, INK_D = "#1d1d1f", "#f5f5f7"
+GRAY_L, GRAY_D = "#6e6e73", "#98989d"
+FAINT_L, FAINT_D = "#86868b", "#a1a1a6"
+HAIR_L, HAIR_D = "#e5e5ea", "#3a3a3c"
+CARD_L, CARD_D = "#fbfbfd", "#1c1c1e"
+CARD_EDGE_L, CARD_EDGE_D = "#ececf0", "#2c2c2e"
 BLUE = "#0071e3"
-INK = "#1d1d1f"
-GRAY = "#6e6e73"
-LIGHT = "#86868b"
-BORDER = "#e5e5ea"
-BG_TOP = "#f5f5f7"
-BG_BOT = "#e8e8ed"
 
 LANG_COLORS = {
-    "JavaScript": "#f1e05a", "TypeScript": "#3178c6", "C#": "#178600",
+    "JavaScript": "#f1e05a", "TypeScript": "#3178c6", "C#": "#4c8f5d",
     "C": "#555555", "C++": "#f34b7d", "Python": "#3572A5", "HTML": "#e34c26",
-    "CSS": "#563d7c", "Shell": "#89e051", "PowerShell": "#012456",
-    "Java": "#b07219", "Go": "#00ADD8", "Rust": "#dea584", "Vue": "#41b883",
-    "Dockerfile": "#384d54", "Lua": "#000080", "MDX": "#fcb32c",
+    "CSS": "#563d7c", "Shell": "#89e051", "Go": "#00ADD8", "Rust": "#dea584",
+    "Java": "#b07219", "PowerShell": "#012456", "Dockerfile": "#384d54",
 }
 
 FONT_URLS = {
     400: "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/files/inter-latin-400-normal.woff2",
     600: "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/files/inter-latin-600-normal.woff2",
+}
+
+REPO_DESCS = {
+    "stealth-pdf-viewer": ["A stealthy PDF viewer and annotator for VS Code.",
+                           "Built for busy workstations."],
+    "MqttVision-Server": ["Realtime MQTT-powered vision server,",
+                          "written in C#."],
 }
 
 
@@ -45,9 +53,7 @@ def get(url, raw=False):
     })
     with urllib.request.urlopen(req, timeout=30) as r:
         data = r.read()
-        if raw:
-            return data
-        return json.loads(data)
+        return data if raw else json.loads(data)
 
 
 def fetch_data():
@@ -59,22 +65,10 @@ def fetch_data():
         if len(batch) < 100:
             break
         page += 1
-    stars = sum(r["stargazers_count"] for r in repos)
-    followers = user["followers"]
-    n_repos = user["public_repos"]
-
-    langs = {}
-    for r in repos:
-        if r["language"]:
-            langs[r["language"]] = langs.get(r["language"], 0) + 1
-    total = sum(langs.values()) or 1
-    top = sorted(langs.items(), key=lambda kv: -kv[1])[:5]
-    langs = [(name, round(cnt / total * 100)) for name, cnt in top]
 
     commits = 0
     try:
-        res = get(f"https://api.github.com/search/commits?q=author:{USER}&per_page=1")
-        commits = res.get("total_count", 0)
+        commits = get(f"https://api.github.com/search/commits?q=author:{USER}&per_page=1").get("total_count", 0)
     except Exception:
         pass
 
@@ -91,10 +85,26 @@ def fetch_data():
     except Exception:
         pass
 
-    avatar = base64.b64encode(get(user["avatar_url"] + "&size=128", raw=True)).decode()
-    created = datetime.strptime(user["created_at"], "%Y-%m-%dT%H:%M:%SZ").strftime("%b %Y")
-    return dict(stars=stars, followers=followers, repos=n_repos, commits=commits,
-                langs=langs, active=active_days, avatar=avatar, joined=created)
+    langs = {}
+    for r in repos:
+        if r["language"]:
+            langs[r["language"]] = langs.get(r["language"], 0) + 1
+    total = sum(langs.values()) or 1
+    top = sorted(langs.items(), key=lambda kv: -kv[1])[:5]
+    langs = [(n, round(c / total * 100)) for n, c in top]
+
+    featured = sorted(repos, key=lambda r: (-r["stargazers_count"], r["pushed_at"]))[:2]
+    featured = [{
+        "name": r["name"],
+        "lang": r["language"] or "",
+        "desc": REPO_DESCS.get(r["name"], ["", ""]),
+        "stars": r["stargazers_count"],
+    } for r in featured if not r["fork"]][:2]
+
+    joined = datetime.strptime(user["created_at"], "%Y-%m-%dT%H:%M:%SZ").strftime("%b %Y")
+    return dict(commits=commits, stars=sum(r["stargazers_count"] for r in repos),
+                followers=user["followers"], repos=user["public_repos"],
+                active=active_days, langs=langs, featured=featured, joined=joined)
 
 
 def load_fonts():
@@ -111,99 +121,106 @@ def esc(s):
     return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def stat_tile(x, y, w, value, label):
-    cx = x + w / 2
-    return f"""
-  <text x="{cx}" y="{y+30}" text-anchor="middle" font-size="22" font-weight="600" fill="{INK}" font-feature-settings="'tnum'">{esc(value)}</text>
-  <text x="{cx}" y="{y+50}" text-anchor="middle" font-size="11" fill="{LIGHT}">{esc(label)}</text>"""
+# ---------------------------------------------------------------- hero
+def build_hero(theme):
+    ink = INK_L if theme == "light" else INK_D
+    gray = GRAY_L if theme == "light" else GRAY_D
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="250" viewBox="0 0 {W} 250">
+  <defs><style>{FONTS}
+{{animation:rise .8s cubic-bezier(.25,.1,.25,1) both}}
+.t{{animation-delay:.12s}}
+@keyframes rise{{from{{opacity:0;transform:translateY(10px)}}to{{opacity:1;transform:none}}}}
+  </style></defs>
+  <text class="h" x="440" y="128" text-anchor="middle" font-family="Inter" font-size="68" font-weight="600" letter-spacing="-1.5" fill="{ink}">xiaomu.</text>
+  <text class="t" x="440" y="170" text-anchor="middle" font-family="Inter" font-size="16" letter-spacing="0.4" fill="{gray}">Code. Build. Ship.</text>
+</svg>"""
 
 
-def build_card(d):
-    W, H = 480, 404
-    tiles = [("Commits", d["commits"]), ("Stars", d["stars"]),
-             ("Followers", d["followers"]), ("Repos", d["repos"])]
-    tiles_svg = "".join(stat_tile(28 + i * 106, 124, 106, v, k) for i, (k, v) in enumerate(tiles))
+# ---------------------------------------------------------------- repos
+def repo_card(x, y, w, h, r, theme):
+    ink = INK_L if theme == "light" else INK_D
+    gray = GRAY_L if theme == "light" else GRAY_D
+    faint = FAINT_L if theme == "light" else FAINT_D
+    fill = CARD_L if theme == "light" else CARD_D
+    edge = CARD_EDGE_L if theme == "light" else CARD_EDGE_D
+    dot = LANG_COLORS.get(r["lang"], "#aeaeb2")
+    pad = 28
+    name_y = y + 62
+    d1_y, d2_y = y + 100, y + 122
+    foot_y = y + h - 30
+    cx = x + pad + 4
+    return f"""  <g>
+    <rect x="{x+1}" y="{y+1}" width="{w-2}" height="{h-2}" rx="20" fill="{fill}" stroke="{edge}"/>
+    <text x="{x+pad}" y="{name_y}" font-family="Inter" font-size="20" font-weight="600" letter-spacing="-0.3" fill="{ink}">{esc(r['name'])}</text>
+    <text x="{x+pad}" y="{d1_y}" font-family="Inter" font-size="13.5" fill="{gray}">{esc(r['desc'][0])}</text>
+    <text x="{x+pad}" y="{d2_y}" font-family="Inter" font-size="13.5" fill="{gray}">{esc(r['desc'][1])}</text>
+    <circle cx="{cx}" cy="{foot_y-4}" r="5" fill="{dot}"/>
+    <text x="{cx+14}" y="{foot_y}" font-family="Inter" font-size="12.5" fill="{faint}">{esc(r['lang'])}</text>
+    <text x="{x+w-pad}" y="{foot_y}" text-anchor="end" font-family="Inter" font-size="12.5" font-weight="600" fill="{BLUE}">GitHub &#8594;</text>
+  </g>"""
 
-    # language stacked bar
-    bar_x, bar_w, bar_y = 28, 424, 246
-    bar = []
+
+def build_repos(d, theme):
+    ink = INK_L if theme == "light" else INK_D
+    gray = GRAY_L if theme == "light" else GRAY_D
+    cards = d["featured"]
+    n = max(1, len(cards))
+    H = 96 + n * 252 + (n - 1) * 24
+    body = []
+    for i, r in enumerate(cards):
+        body.append(repo_card(30, 96 + i * 276, W - 60, 252, r, theme))
+    if not cards:
+        body.append("")
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+  <defs><style>{FONTS}</style></defs>
+  <text x="30" y="52" font-family="Inter" font-size="13" font-weight="600" letter-spacing="1.2" fill="{gray}">FEATURED</text>
+{chr(10).join(body)}
+</svg>"""
+
+
+# ---------------------------------------------------------------- specs
+def build_specs(d, theme):
+    ink = INK_L if theme == "light" else INK_D
+    gray = GRAY_L if theme == "light" else GRAY_D
+    faint = FAINT_L if theme == "light" else FAINT_D
+    hair = HAIR_L if theme == "light" else HAIR_D
+
+    rows = [("Commits", d["commits"]), ("Stars", d["stars"]),
+            ("Followers", d["followers"]), ("Public repositories", d["repos"]),
+            ("Active days · 90d", d["active"]), ("Joined GitHub", d["joined"])]
+
+    y = 96
+    body = []
+    for label, value in rows:
+        body.append(
+            f'  <text x="30" y="{y+24}" font-family="Inter" font-size="13" letter-spacing="0.3" fill="{gray}">{esc(label)}</text>\n'
+            f'  <text x="{W-30}" y="{y+25}" text-anchor="end" font-family="Inter" font-size="15" font-weight="600" font-feature-settings="\'tnum\'" fill="{ink}">{esc(value)}</text>\n'
+            f'  <line x1="30" y1="{y+44}" x2="{W-30}" y2="{y+44}" stroke="{hair}"/>')
+        y += 64
+
+    # languages bar
+    y += 10
+    body.append(f'  <text x="30" y="{y+16}" font-family="Inter" font-size="13" letter-spacing="0.3" fill="{gray}">Languages</text>')
+    bar_y = y + 34
     offset = 0.0
-    for i, (name, pct) in enumerate(d["langs"] or [("None", 100)]):
-        seg_w = max(bar_w * pct / 100 - (2 if i < len(d["langs"]) - 1 else 0), 4)
-        color = LANG_COLORS.get(name, "#c7c7cc")
-        r = 6 if offset == 0 or offset + seg_w >= bar_w - 1 else 0
-        bar.append(f'<rect x="{bar_x+offset:.1f}" y="{bar_y}" width="{seg_w:.1f}" height="12" rx="{r}" fill="{color}"/>')
+    bar_w = W - 60
+    langs = d["langs"] or [("None", 100)]
+    segs = []
+    for i, (name, pct) in enumerate(langs):
+        seg_w = max(bar_w * pct / 100 - (2 if i < len(langs) - 1 else 0), 6)
+        color = LANG_COLORS.get(name, "#aeaeb2")
+        segs.append(f'<rect x="{30+offset:.1f}" y="{bar_y}" width="{seg_w:.1f}" height="10" rx="5" fill="{color}"/>')
         offset += bar_w * pct / 100
         if offset >= bar_w:
             break
-
-    # legend, two columns
-    legend = []
-    for i, (name, pct) in enumerate(d["langs"] or [("None", 0)]):
-        col, row = i % 2, i // 2
-        lx, ly = 28 + col * 216, 286 + row * 26
-        color = LANG_COLORS.get(name, "#c7c7cc")
-        legend.append(
-            f'<circle cx="{lx+5}" cy="{ly-4}" r="5" fill="{color}"/>'
-            f'<text x="{lx+18}" y="{ly}" font-size="12.5" fill="{INK}">{esc(name)}</text>'
-            f'<text x="{lx+206}" y="{ly}" text-anchor="end" font-size="12.5" fill="{LIGHT}" font-feature-settings="\'tnum\'">{pct}%</text>')
-
-    legend_rows = max(1, -(-len(d["langs"]) // 2)) if d["langs"] else 1
-    div2_y = 282 + legend_rows * 26 + 8
-
+    body.append("  " + "".join(segs))
+    legend = "   ·   ".join(f"{n} {p}%" for n, p in langs)
+    body.append(f'  <text x="30" y="{bar_y+34}" font-family="Inter" font-size="12.5" fill="{faint}">{esc(legend)}</text>')
+    H = bar_y + 58
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
-  <defs>
-    <style>{FONTS}</style>
-    <clipPath id="av"><circle cx="58" cy="58" r="30"/></clipPath>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="2" stdDeviation="8" flood-color="#000" flood-opacity="0.05"/>
-    </filter>
-  </defs>
-  <rect x="1" y="1" width="{W-2}" height="{H-2}" rx="18" fill="#ffffff" stroke="{BORDER}" filter="url(#shadow)"/>
-  <image x="28" y="28" width="60" height="60" clip-path="url(#av)" href="data:image/png;base64,{d['avatar']}"/>
-  <text x="104" y="54" font-size="20" font-weight="600" fill="{INK}">xiaomu</text>
-  <text x="104" y="76" font-size="12.5" fill="{GRAY}">Code · Build · Ship · Tools for busy people</text>
-  <line x1="28" y1="110" x2="{W-28}" y2="110" stroke="{BORDER}"/>
-{tiles_svg}
-  <line x1="28" y1="208" x2="{W-28}" y2="208" stroke="{BORDER}"/>
-  <text x="28" y="232" font-size="12" font-weight="600" fill="{INK}">Languages</text>
-  {''.join(bar)}
-  {''.join(legend)}
-  <line x1="28" y1="{div2_y}" x2="{W-28}" y2="{div2_y}" stroke="{BORDER}"/>
-  <text x="28" y="{div2_y+26}" font-size="11.5" fill="{GRAY}">Joined GitHub {esc(d['joined'])}</text>
-  <text x="{W-28}" y="{div2_y+26}" text-anchor="end" font-size="11.5" fill="{GRAY}">{d['active']} active days · recent 90d</text>
-</svg>"""
-
-
-def build_header():
-    W, H = 880, 170
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
-  <defs>
-    <style>{FONTS}</style>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="{BG_TOP}"/><stop offset="1" stop-color="{BG_BOT}"/>
-    </linearGradient>
-    <radialGradient id="blob" cx="0.5" cy="0.4" r="0.6">
-      <stop offset="0" stop-color="#dcdce2" stop-opacity="0.9"/><stop offset="1" stop-color="#dcdce2" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="{W}" height="{H}" fill="url(#bg)"/>
-  <ellipse cx="440" cy="60" rx="380" ry="120" fill="url(#blob)"/>
-  <circle cx="440" cy="118" r="3.5" fill="{BLUE}"/>
-  <text x="440" y="76" text-anchor="middle" font-size="46" font-weight="600" fill="{INK}" letter-spacing="0.5">xiaomu</text>
-  <text x="459" y="124" text-anchor="middle" font-size="14.5" fill="{GRAY}">Code · Build · Ship</text>
-</svg>"""
-
-
-def build_footer():
-    W, H = 880, 64
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
-  <defs>
-    <linearGradient id="fg" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="{BG_BOT}"/><stop offset="1" stop-color="{BG_TOP}"/>
-    </linearGradient>
-  </defs>
-  <path d="M0,{H-14} C220,{H+10} 660,{H-34} {W},{H-10} L{W},{H} L0,{H} Z" fill="url(#fg)"/>
+  <defs><style>{FONTS}</style></defs>
+  <text x="30" y="52" font-family="Inter" font-size="13" font-weight="600" letter-spacing="1.2" fill="{gray}">TECH SPECS</text>
+{chr(10).join(body)}
 </svg>"""
 
 
@@ -213,9 +230,15 @@ if __name__ == "__main__":
     data = fetch_data()
     print("loading fonts ...")
     FONTS = load_fonts()
-    print("stats:", data["commits"], "commits,", data["stars"], "stars,",
-          data["followers"], "followers,", data["repos"], "repos, langs:", data["langs"])
-    for name, svg in [("header.svg", build_header()), ("card.svg", build_card(data)), ("footer.svg", build_footer())]:
+    print("stats:", data["commits"], "commits /", data["stars"], "stars /",
+          data["followers"], "followers /", data["repos"], "repos /",
+          data["langs"], "/ featured:", [r["name"] for r in data["featured"]])
+    outs = {
+        "hero-light.svg": build_hero("light"), "hero-dark.svg": build_hero("dark"),
+        "repos-light.svg": build_repos(data, "light"), "repos-dark.svg": build_repos(data, "dark"),
+        "specs-light.svg": build_specs(data, "light"), "specs-dark.svg": build_specs(data, "dark"),
+    }
+    for name, svg in outs.items():
         path = os.path.join(OUT_DIR, name)
         with io.open(path, "w", encoding="utf-8") as f:
             f.write(svg)

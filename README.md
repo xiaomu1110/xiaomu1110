@@ -1,63 +1,31 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/header.svg" alt="banner" width="100%" />
-</div>
-
-<div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Noto+Sans+SC&weight=400&size=15&pause=1200&color=6E6E73&center=true&vCenter=true&random=false&width=620&height=28&lines=%E5%86%99%E4%BB%A3%E7%A0%81%E7%9A%84%E4%BA%BA%EF%BC%8C%E4%B9%9F%E6%98%AF%E5%86%99%E5%B7%A5%E5%85%B7%E7%9A%84%E4%BA%BA%EF%BC%9B%E5%B7%A5%E5%85%B7%E5%A5%BD%E7%94%A8%E6%89%8D%E6%98%AF%E7%A1%AC%E9%81%93%E7%90%86" alt="typing" />
-</div>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/hero-dark.svg" />
+  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/hero-light.svg" alt="xiaomu" width="100%" />
+</picture>
 
 <br />
 
 <div align="center">
-  <img src="https://komarev.com/ghpvc/?username=xiaomu1110&style=flat-square&color=0071e3&label=Visitors" alt="visitors" />
-  &nbsp;
-  <img src="https://img.shields.io/github/followers/xiaomu1110?style=flat-square&color=0071e3&label=Followers" alt="followers" />
-  &nbsp;
-  <img src="https://img.shields.io/github/stars/xiaomu1110?affiliations=OWNER&style=flat-square&color=0071e3&label=Stars" alt="stars" />
+写代码的人，也是写工具的人。<br />
+正在打磨 <a href="https://github.com/xiaomu1110/stealth-pdf-viewer">stealth-pdf-viewer</a> —— 极致隐蔽的 VS Code PDF 做题批注工具。
 </div>
 
 <br />
 
-## About
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/repos-dark.svg" />
+  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/repos-light.svg" alt="featured repositories" width="100%" />
+</picture>
 
-```text
-🔭 正在做    stealth-pdf-viewer —— 专为工位打工人设计的极致隐蔽 VS Code PDF 题册做题涂鸦与批注工具
-🌱 折腾方向  JavaScript / C# / VS Code 扩展开发 / MQTT
-💬 联系我    有想法随时开 Issue，看到就回
-```
+<br />
 
-## Tech Stack
-
-<div align="center">
-  <a href="https://skillicons.dev">
-    <img src="https://skillicons.dev/icons?i=js,ts,nodejs,csharp,dotnet,vscode,git,github,rabbitmq,docker&theme=light" alt="skills" />
-  </a>
-</div>
-
-## Stats
-
-<div align="center">
-  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/card.svg" alt="stats card" width="480" />
-</div>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/specs-dark.svg" />
+  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/specs-light.svg" alt="tech specs" width="100%" />
+</picture>
 
 <br />
 
 <div align="center">
-  <img src="https://streak-stats.demolab.com?user=xiaomu1110&theme=github&hide_border=true&date_format=%5BY.%5Dn.%5Bj%5D" alt="streak" width="66%" />
-</div>
-
-## Snake
-
-<div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/github-snake-dark.svg" />
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/github-snake.svg" />
-    <img alt="snake animation" src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/github-snake.svg" width="100%" />
-  </picture>
-</div>
-
-<br />
-
-<div align="center">
-  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/footer.svg" alt="footer" width="100%" />
+<sub>JavaScript · TypeScript · C# · .NET · Node.js · VS Code · Git · MQTT · Docker</sub>
 </div>
