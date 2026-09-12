@@ -96,6 +96,20 @@ def fetch_data():
                 langs=langs, featured=featured, joined=joined)
 
 
+def fetch_bing(dest):
+    """Download today's Bing wallpaper. Returns (page_url, copyright, bytes)."""
+    ua = {"User-Agent": "Mozilla/5.0 (profile-bing-fetch)"}
+    api = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN"
+    with urllib.request.urlopen(urllib.request.Request(api, headers=ua), timeout=30) as r:
+        meta = json.loads(r.read().decode("utf-8"))["images"][0]
+    img_url = "https://www.bing.com" + meta["urlbase"] + "_1920x1080.jpg"
+    with urllib.request.urlopen(urllib.request.Request(img_url, headers=ua), timeout=90) as r:
+        blob = r.read()
+    with open(dest, "wb") as f:
+        f.write(blob)
+    return img_url, meta.get("copyright", ""), len(blob)
+
+
 def load_fonts():
     faces = []
     for weight, url in FONT_URLS.items():
@@ -221,3 +235,9 @@ if __name__ == "__main__":
         with io.open(path, "w", encoding="utf-8") as f:
             f.write(svg)
         print("wrote", path, os.path.getsize(path), "bytes")
+
+    try:
+        url, credit, size = fetch_bing(os.path.join(OUT_DIR, "bing.jpg"))
+        print("bing:", size, "bytes |", url, "|", credit)
+    except Exception as e:
+        print("bing fetch failed, keeping previous image:", e)
