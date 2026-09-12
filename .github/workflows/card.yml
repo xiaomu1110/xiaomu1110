@@ -1,0 +1,35 @@
+name: Card
+
+on:
+  schedule:
+    - cron: "30 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  card:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: generate cards
+        run: python scripts/card.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.METRICS_TOKEN }}
+
+      - name: push to output branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin output || true
+          git checkout output 2>/dev/null || git checkout -b output
+          cp -f dist/header.svg dist/card.svg dist/footer.svg .
+          git add header.svg card.svg footer.svg
+          git commit -m "chore: update profile cards" || echo "no changes"
+          git push origin output
