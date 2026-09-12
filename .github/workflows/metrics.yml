@@ -25,6 +25,7 @@ jobs:
           plugin_achievements_secrets: yes
           plugin_achievements_display: compact
           config_timezone: Asia/Shanghai
+          extras_css: "svg { font-family: -apple-system, 'PingFang SC', 'Noto Sans SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', sans-serif !important; } h1, h2, h3 { font-weight: 500 !important; }"
           output_action: commit
           committer_branch: output
           committer_message: "chore: update metrics"
