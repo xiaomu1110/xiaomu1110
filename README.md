@@ -37,7 +37,7 @@
 ## 📊 GitHub Stats
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/metrics.svg" alt="metrics" width="100%" />
+  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/github-metrics.svg" alt="metrics" width="100%" />
 </div>
 
 <br />
