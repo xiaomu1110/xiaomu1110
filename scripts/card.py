@@ -13,7 +13,7 @@ from datetime import datetime
 
 USER = "xiaomu1110"
 TOKEN = os.environ.get("GITHUB_TOKEN", "")
-OUT_DIR = "dist"
+OUT_DIR = "gen"
 
 W = 880
 
