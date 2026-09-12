@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:f5f5f7,100:e3e3e8&height=140&text=xiaomu&fontColor=1d1d1f&fontSize=46&fontAlignY=34&animation=fadeIn" alt="banner" width="100%" />
+  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/header.svg" alt="banner" width="100%" />
 </div>
 
 <div align="center">
@@ -37,7 +37,7 @@
 ## Stats
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/github-metrics.svg" alt="metrics" width="88%" />
+  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/card.svg" alt="stats card" width="480" />
 </div>
 
 <br />
@@ -59,5 +59,5 @@
 <br />
 
 <div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:e3e3e8,50:f5f5f7,100:f5f5f7&height=90&section=footer" alt="footer" width="100%" />
+  <img src="https://raw.githubusercontent.com/xiaomu1110/xiaomu1110/output/footer.svg" alt="footer" width="100%" />
 </div>
